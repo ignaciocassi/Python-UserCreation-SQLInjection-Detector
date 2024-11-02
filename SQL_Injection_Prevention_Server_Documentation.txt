@@ -1,0 +1,132 @@
+
+# Documentación del Código: SQL Injection Prevention Server
+
+## Descripción General
+
+Este proyecto es un servidor web construido con Flask que se enfoca en la prevención de ataques de inyección SQL. Utiliza técnicas de validación de entradas, limitación de solicitudes, autenticación básica y registro de eventos para proteger la integridad de los datos y la seguridad del usuario.
+
+## Estructura del Proyecto
+
+El código está organizado en una única clase principal llamada `SQLInjectionPreventer`, junto con las rutas de la API que manejan las solicitudes. 
+
+### Dependencias
+
+Asegúrate de tener instaladas las siguientes librerías:
+
+- Flask
+- Flask-SQLAlchemy
+- Flask-Limiter
+- pydantic
+
+### Instalación
+
+Ejecuta el siguiente comando para instalar todas las dependencias necesarias:
+
+```bash
+pip install Flask Flask-SQLAlchemy Flask-Limiter pydantic
+```
+
+### Ejecución
+
+Para ejecutar el servidor, asegúrate de que todas las dependencias estén instaladas y ejecuta el archivo del servidor:
+
+```bash
+python nombre_del_archivo.py
+```
+
+## Componentes del Código
+
+### 1. Importaciones
+
+```python
+from flask import Flask, request, jsonify, abort
+from flask_sqlalchemy import SQLAlchemy
+from flask_limiter import Limiter
+from flask_limiter.util import get_remote_address
+from pydantic import BaseModel, EmailStr, ValidationError
+import re
+import logging
+from werkzeug.security import generate_password_hash, check_password_hash
+from functools import wraps
+```
+
+- **Flask**: Framework para crear aplicaciones web.
+- **SQLAlchemy**: ORM para manejar la base de datos.
+- **Flask-Limiter**: Para limitar el número de solicitudes.
+- **Pydantic**: Para la validación de datos.
+- **re**: Para manejar expresiones regulares.
+- **logging**: Para registrar eventos y errores.
+- **werkzeug.security**: Para manejar la seguridad de las contraseñas.
+- **functools**: Para utilizar decoradores.
+
+### 2. Clase `SQLInjectionPreventer`
+
+Esta clase se encarga de la lógica principal para prevenir ataques de inyección SQL.
+
+```python
+class SQLInjectionPreventer:
+    def __init__(self):
+        self.patterns = [
+            r"(?i)(SELECT|INSERT|UPDATE|DELETE|DROP|UNION|;|--|#)"
+        ]
+```
+
+- **`__init__`**: Inicializa la clase con patrones de expresiones regulares que se usarán para detectar intentos de inyección SQL.
+
+#### 2.1 Métodos
+
+- **`is_injection_attempt(self, data)`**: Verifica si los datos contienen patrones de inyección SQL.
+- **`check_for_injection(self, data)`**: Llama a `is_injection_attempt` y registra un aviso en caso de detección de inyección.
+
+### 3. Configuración de la Aplicación Flask
+
+```python
+app = Flask(__name__)
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///mydatabase.db'
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+db = SQLAlchemy(app)
+limiter = Limiter(get_remote_address)
+```
+
+- **`app`**: Instancia de la aplicación Flask.
+- **`db`**: Instancia de SQLAlchemy para manejar la base de datos.
+- **`limiter`**: Instancia de Flask-Limiter para gestionar la limitación de solicitudes.
+
+### 4. Rutas de la API
+
+#### 4.1 Ruta `/submit`
+
+```python
+@app.route('/submit', methods=['POST'])
+def submit_data():
+    data = request.get_json()
+    prevention.check_for_injection(data)
+    # Lógica para manejar los datos aquí
+```
+
+- **Método**: `POST`
+- **Descripción**: Recibe datos JSON y verifica si contienen intentos de inyección SQL.
+
+### 5. Manejo de Errores
+
+El código aborta la solicitud si se detecta un intento de inyección, enviando un mensaje de error y un código de estado 400.
+
+### 6. Registro de Alertas
+
+Cuando se detecta un posible intento de inyección SQL, se registra un aviso en el archivo de log y se imprime un mensaje en la terminal:
+
+```python
+logging.warning(f"Possible SQL injection attempt detected: {data}")
+print(f"Alert: Possible SQL injection attempt detected: {data}")
+```
+
+## Funcionalidades de Seguridad
+
+1. **Validación de Entradas**: Usa `pydantic` para asegurar que los datos de entrada cumplen con el formato esperado.
+2. **Autenticación Básica**: Implementa mecanismos de autenticación para proteger rutas sensibles.
+3. **Limitación de Solicitudes**: Utiliza `Flask-Limiter` para evitar abusos mediante limitaciones en las solicitudes.
+4. **Registro de Intentos de Inyección**: Guarda los intentos de inyección en un archivo de log para su posterior revisión.
+
+## Conclusiones
+
+Este servidor está diseñado para proteger aplicaciones en producción y reducir las amenazas de inyección SQL, manteniendo la integridad de los datos y la seguridad del usuario. La implementación de las funcionalidades de seguridad hace que este código sea adecuado para aplicaciones críticas que manejan datos sensibles.
