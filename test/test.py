@@ -19,15 +19,15 @@ class TestInjectionPreventionServer(unittest.TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertIn('correctamente', response.get_data(as_text=True))
 
-        def test_add_user_legit(self):
-            response = self.client.post('/add_user', data=json.dumps({
-                'username': 'Maximiliano',
-                'email': 'maximiliano@gmail.com',
-                'password': 'Mess1!!!'
-            }), content_type='application/json')
-            print(response.get_data(as_text=True))
-            self.assertEqual(response.status_code, 200)
-            self.assertIn('correctamente', response.get_data(as_text=True))
+    def test_add_user_legit(self):
+        response = self.client.post('/add_user', data=json.dumps({
+            'username': 'Santiago',
+            'email': 'santiago@gmail.com',
+            'password': 'Mess1!!!'
+        }), content_type='application/json')
+        print(response.get_data(as_text=True))
+        self.assertEqual(response.status_code, 200)
+        self.assertIn('correctamente', response.get_data(as_text=True))
 
     def test_add_user_legit(self):
         response = self.client.post('/add_user', data=json.dumps({
